@@ -1,6 +1,11 @@
 import { weatherApi } from "./api";
 import { store } from "../store";
-import { setWeatherData, setLoading, setError } from "../store/weatherSlice";
+import {
+  setWeatherData,
+  setSummaryData,
+  setLoading,
+  setError,
+} from "../store/weatherSlice";
 import { setAlerts } from "../store/alertSlice";
 
 export const WeatherService = {
@@ -16,14 +21,39 @@ export const WeatherService = {
     }
   },
 
-  async fetchSummaryData(city) {
+  async fetchSummaryAndHistoricalData(city) {
     try {
-      const response = await weatherApi.getDailySummary(city);
-      console.log("srespnse", response);
-      return response.data;
+      store.dispatch(setLoading(true));
+
+      // Calculate date range for historical data (e.g., last 7 days)
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+
+      const [summaryResponse, historyResponse] = await Promise.all([
+        weatherApi.getDailySummary(city),
+        weatherApi.getWeatherHistory(city, {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+        }),
+      ]);
+
+      const summaryData = summaryResponse.data;
+      const historyData = historyResponse.data.weather;
+      console.log("history", historyData);
+
+      // Combine summary and historical data without filtering
+      const combinedData = summaryData.map((summary) => ({
+        ...summary,
+        historicalData: historyData, // Attach all history data
+      }));
+      console.log("combined", combinedData);
+      store.dispatch(setSummaryData(combinedData));
     } catch (error) {
-      console.error("Error fetching summary data:", error);
-      return [];
+      console.error("Error fetching summary and historical data:", error);
+      store.dispatch(setError("Failed to fetch weather data"));
+    } finally {
+      store.dispatch(setLoading(false));
     }
   },
 
@@ -40,11 +70,16 @@ export const WeatherService = {
 
   startPolling(city) {
     this.fetchCurrentWeather(city);
+    this.fetchSummaryAndHistoricalData(city);
     this.fetchAlerts(city);
 
     const weatherInterval = setInterval(() => {
       this.fetchCurrentWeather(city);
     }, 5 * 60 * 1000); // Every 5 minutes
+
+    const summaryHistoryInterval = setInterval(() => {
+      this.fetchSummaryAndHistoricalData(city);
+    }, 15 * 60 * 1000); // Every 15 minutes
 
     const alertsInterval = setInterval(() => {
       this.fetchAlerts(city);
@@ -52,6 +87,7 @@ export const WeatherService = {
 
     return () => {
       clearInterval(weatherInterval);
+      clearInterval(summaryHistoryInterval);
       clearInterval(alertsInterval);
     };
   },

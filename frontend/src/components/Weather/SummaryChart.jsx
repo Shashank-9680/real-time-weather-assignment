@@ -7,48 +7,69 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
+  Area,
 } from "recharts";
 
-const LegendItem = ({ color, text }) => (
-  <div className="flex items-center mr-4">
-    <div className={`w-4 h-0.5 ${color} mr-1`}></div>
-    <span>{text}</span>
-  </div>
-);
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-4 border rounded shadow">
+        <p className="font-bold">{`Date: ${new Date(
+          label
+        ).toLocaleDateString()}`}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color }}>
+            {`${entry.name}: ${entry.value.toFixed(2)}°C`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 const SummaryChart = ({ summaryData }) => {
-  console.log("SummaryChart rendered");
-  console.log("summaryData:", summaryData);
-
+  console.log("summary", summaryData);
   if (!summaryData || summaryData.length === 0) {
     return <div>No data available for the chart.</div>;
   }
 
+  const processedData = summaryData.reduce((acc, data) => {
+    acc.push({
+      date: data.date,
+      maxTemp: data.maxTemp,
+      avgTemp: data.avgTemp,
+      minTemp: data.minTemp,
+    });
+    return acc;
+  }, []);
+
+  console.log("process", processedData);
   return (
     <div
       className="bg-white rounded-lg shadow-lg p-6"
-      style={{ height: "400px" }}
+      style={{ height: "500px" }}
     >
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold">Temperature Trends</h3>
-        <div className="flex items-center">
-          <LegendItem color="bg-red-500" text="Max Temp" />
-          <LegendItem color="bg-blue-500" text="Avg Temp" />
-          <LegendItem color="bg-green-500" text="Min Temp" />
-        </div>
-      </div>
+      <h3 className="text-xl font-semibold mb-4">
+        Temperature Trends for {summaryData[0]?.city || "Unknown City"}
+      </h3>
       <ResponsiveContainer width="100%" height="90%">
-        <LineChart data={summaryData}>
+        <LineChart
+          data={processedData}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="date"
-            tickFormatter={(date) => new Date(date).toLocaleDateString()}
+            tickFormatter={(tickItem) =>
+              new Date(tickItem).toLocaleDateString()
+            }
           />
           <YAxis />
-          <Tooltip
-            labelFormatter={(date) => new Date(date).toLocaleDateString()}
-            formatter={(value) => [`${value.toFixed(2)}°C`]}
-          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+
           <Line
             type="monotone"
             dataKey="maxTemp"

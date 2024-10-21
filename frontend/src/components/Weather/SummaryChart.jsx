@@ -6,16 +6,38 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 
+const LegendItem = ({ color, text }) => (
+  <div className="flex items-center mr-4">
+    <div className={`w-4 h-0.5 ${color} mr-1`}></div>
+    <span>{text}</span>
+  </div>
+);
+
 const SummaryChart = ({ summaryData }) => {
-  console.log(summaryData);
+  console.log("SummaryChart rendered");
+  console.log("summaryData:", summaryData);
+
+  if (!summaryData || summaryData.length === 0) {
+    return <div>No data available for the chart.</div>;
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 h-96">
-      <h3 className="text-xl font-semibold mb-4">Temperature Trends</h3>
-      <ResponsiveContainer width="100%" height="100%">
+    <div
+      className="bg-white rounded-lg shadow-lg p-6"
+      style={{ height: "400px" }}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">Temperature Trends</h3>
+        <div className="flex items-center">
+          <LegendItem color="bg-red-500" text="Max Temp" />
+          <LegendItem color="bg-blue-500" text="Avg Temp" />
+          <LegendItem color="bg-green-500" text="Min Temp" />
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height="90%">
         <LineChart data={summaryData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
@@ -27,7 +49,6 @@ const SummaryChart = ({ summaryData }) => {
             labelFormatter={(date) => new Date(date).toLocaleDateString()}
             formatter={(value) => [`${value.toFixed(2)}°C`]}
           />
-          <Legend />
           <Line
             type="monotone"
             dataKey="maxTemp"
@@ -51,4 +72,5 @@ const SummaryChart = ({ summaryData }) => {
     </div>
   );
 };
+
 export default SummaryChart;

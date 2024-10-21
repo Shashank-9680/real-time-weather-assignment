@@ -19,6 +19,7 @@ export const WeatherService = {
   async fetchSummaryData(city) {
     try {
       const response = await weatherApi.getDailySummary(city);
+      console.log("srespnse", response);
       return response.data;
     } catch (error) {
       console.error("Error fetching summary data:", error);

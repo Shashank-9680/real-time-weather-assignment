@@ -11,6 +11,7 @@ import {
 } from "recharts";
 
 const SummaryChart = ({ summaryData }) => {
+  console.log(summaryData);
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 h-96">
       <h3 className="text-xl font-semibold mb-4">Temperature Trends</h3>
@@ -24,7 +25,7 @@ const SummaryChart = ({ summaryData }) => {
           <YAxis />
           <Tooltip
             labelFormatter={(date) => new Date(date).toLocaleDateString()}
-            formatter={(value) => [`${value}°C`]}
+            formatter={(value) => [`${value.toFixed(2)}°C`]}
           />
           <Legend />
           <Line

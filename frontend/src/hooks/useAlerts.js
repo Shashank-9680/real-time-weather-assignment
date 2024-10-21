@@ -12,6 +12,7 @@ export const useAlerts = (city) => {
       const response = await weatherApi.getAlerts(city, {
         acknowledged: false,
       });
+      console.log("response", response);
       setAlerts(response.data);
       setError(null);
     } catch (err) {

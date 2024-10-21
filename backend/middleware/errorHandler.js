@@ -13,6 +13,12 @@ const errorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
 
+  // Handle rate limit error
+  if (err.message.includes("rate limit exceeded")) {
+    err.statusCode = 429; // Too Many Requests
+    err.message = "API rate limit exceeded, please try again later.";
+  }
+
   if (process.env.NODE_ENV === "development") {
     res.status(err.statusCode).json({
       status: err.status,
@@ -21,15 +27,12 @@ const errorHandler = (err, req, res, next) => {
       stack: err.stack,
     });
   } else {
-    // Production error handling
     if (err.isOperational) {
-      // Known operational errors
       res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
       });
     } else {
-      // Programming or unknown errors
       console.error("ERROR 💥", err);
       res.status(500).json({
         status: "error",

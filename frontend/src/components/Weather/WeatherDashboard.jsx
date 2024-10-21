@@ -20,24 +20,30 @@ const CITIES = [
 const WeatherDashboard = () => {
   const [selectedCity, setSelectedCity] = useState("Delhi");
   const dispatch = useDispatch();
-  const { currentWeather, loading, error } = useSelector(
+
+  const { currentWeather, summaryData, loading, error } = useSelector(
     (state) => state.weather
   );
+
   const {
     alerts,
     loading: alertsLoading,
     acknowledgeAlert,
   } = useAlerts(selectedCity);
-
+  console.log("alert", alerts);
   useEffect(() => {
     const stopPolling = WeatherService.startPolling(selectedCity);
 
     const fetchSummaryData = async () => {
-      const data = await WeatherService.fetchSummaryData(selectedCity);
-      dispatch(setSummaryData(data));
+      try {
+        const data = await WeatherService.fetchSummaryData(selectedCity);
+        dispatch(setSummaryData(data));
+      } catch (err) {
+        console.error(`Failed to fetch summary data: ${err.message}`);
+      }
     };
 
-    fetchSummaryData();
+    fetchSummaryData(); // Fetch summary data on mount
     const summaryInterval = setInterval(fetchSummaryData, 15 * 60 * 1000); // Every 15 minutes
 
     return () => {
@@ -90,8 +96,9 @@ const WeatherDashboard = () => {
         />
       </div>
 
+      {/* Pass summaryData to SummaryChart */}
       <div className="mt-8">
-        <SummaryChart />
+        <SummaryChart summaryData={summaryData} />
       </div>
     </div>
   );

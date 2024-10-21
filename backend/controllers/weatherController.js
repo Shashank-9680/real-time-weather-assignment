@@ -1,12 +1,9 @@
-// Example updated weatherController.js
 import { catchAsync } from "../middleware/errorHandler.js";
-import { config } from "../config/config.js";
 import { validateCity, validateDateRange } from "../utils/validators.js";
-import { kelvinToCelsius, calculateStats } from "../utils/helpers.js";
 import logger from "../utils/logger.js";
 import { fetchWeatherData } from "../services/weatherService.js";
 
-// Wrap controller with catchAsync to handle errors
+// Get current weather for a specific city
 export const getCurrentWeather = catchAsync(async (req, res) => {
   const { city } = req.params;
 
@@ -20,10 +17,12 @@ export const getCurrentWeather = catchAsync(async (req, res) => {
   res.json(weather);
 });
 
+// Get historical weather data for a specific city
 export const getWeatherHistory = catchAsync(async (req, res) => {
   const { city } = req.params;
   const { start, end } = req.query;
 
+  // Validate city and date range
   validateCity(city);
   validateDateRange(start, end);
 

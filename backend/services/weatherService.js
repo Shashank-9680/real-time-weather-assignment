@@ -13,25 +13,31 @@ const CITIES = [
   "Hyderabad",
 ];
 
-// Cache to store last API call time for each city
-const apiCallCache = new Map();
-const MIN_API_CALL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+// Set to track the number of requests made in the current minute
+let requestCount = 0;
+const MAX_REQUESTS_PER_MINUTE = 60;
 
+// Function to handle rate-limited fetching of weather data
 export const fetchWeatherData = async (city) => {
-  const lastCallTime = apiCallCache.get(city);
-  const now = Date.now();
-
-  if (lastCallTime && now - lastCallTime < MIN_API_CALL_INTERVAL) {
-    throw new Error("API call rate limit exceeded");
+  if (requestCount >= MAX_REQUESTS_PER_MINUTE) {
+    console.log("Max API request limit reached for this minute.");
+    return null; // Return null instead of throwing an error
   }
 
   try {
     const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&appid=${OPENWEATHER_API_KEY}`
+      `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&appid=61873733290ee3082a1f68a67066db56`
     );
 
-    apiCallCache.set(city, now);
+    // Increment request count
+    requestCount++;
 
+    // Reset request count every minute
+    setTimeout(() => {
+      requestCount = Math.max(requestCount - 1, 0); // Prevent going negative
+    }, 60000);
+
+    // Process weather data
     const weatherData = {
       city,
       main: response.data.weather[0].main,
@@ -50,23 +56,21 @@ export const fetchWeatherData = async (city) => {
 
     return weather;
   } catch (error) {
-    console.error(`Error fetching weather data for ${city}:`, error);
-    throw error;
+    console.error(`Error fetching weather data for ${city}:`, error.message);
+    return null; // Return null in case of error
   }
 };
 
-export const startWeatherMonitoring = async () => {
+// Function to monitor weather at set intervals
+export const startWeatherMonitoring = () => {
   setInterval(async () => {
     for (const city of CITIES) {
-      try {
-        await fetchWeatherData(city);
-      } catch (error) {
-        console.error(`Error monitoring weather for ${city}:`, error);
-      }
+      await fetchWeatherData(city);
     }
-  }, MIN_API_CALL_INTERVAL);
+  }, 1000); // Check every second, but will respect the API limit
 };
 
-const kelvinToCelsius = (kelvin) => {
+// Utility function to convert Kelvin to Celsius
+export const kelvinToCelsius = (kelvin) => {
   return Math.round((kelvin - 273.15) * 100) / 100;
 };

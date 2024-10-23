@@ -2,8 +2,10 @@ import axios from "axios";
 import Weather from "../models/Weather.js";
 import { checkAndTriggerAlerts } from "./alertService.js";
 import { updateDailySummary } from "./summaryService.js";
-
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+import dotenv from "dotenv";
+dotenv.config();
+const OPENWEATHERKEY = process.env.OPENWEATHER_API_KEY;
+console.log("opennnn", OPENWEATHERKEY);
 const CITIES = [
   "Delhi",
   "Mumbai",
@@ -26,7 +28,7 @@ export const fetchWeatherData = async (city) => {
 
   try {
     const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&appid=61873733290ee3082a1f68a67066db56`
+      `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&appid=${OPENWEATHERKEY}`
     );
 
     // Increment request count
